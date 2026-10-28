@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Se hai coraggio… TAP!</title>
+<style>
+:root{color-scheme:dark;--yellow:#ffd83d;--red:#ff4d4d;--ink:#111827}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#374151,#111827 68%);color:#fff}
+main{width:min(100%,480px);text-align:center}
+.tag{display:inline-block;border:2px solid var(--yellow);color:var(--yellow);font-weight:900;letter-spacing:.12em;padding:7px 12px;border-radius:999px;font-size:.75rem}
+.face{font-size:4rem;line-height:1.15;margin:14px 0 3px}
+h1{margin:0;font-size:clamp(2rem,8vw,3rem);line-height:.98;font-weight:1000;letter-spacing:-.04em;text-transform:uppercase}
+h1 span{display:block;color:var(--yellow)}
+.sub{color:#d1d5db;margin:13px 0 18px}
+.card{background:#fff;color:var(--ink);border:4px solid var(--yellow);border-radius:24px;padding:20px;box-shadow:0 8px 0 #0005;min-height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden}
+.kind{font-size:.72rem;font-weight:950;letter-spacing:.14em;color:#6b7280;text-transform:uppercase}
+#joke{font-size:clamp(1.25rem,5vw,1.65rem);font-weight:850;line-height:1.25;margin:14px 0}
+#media{display:none;width:100%;max-height:56vh;border-radius:14px;margin-top:12px;background:#111}
+#photo{display:none;width:100%;max-height:56vh;object-fit:contain;border-radius:14px;margin-top:12px}
+#caption{font-weight:800;margin:10px 0 0}
+button{margin-top:20px;border:0;border-radius:15px;background:var(--red);color:white;padding:16px 18px;width:100%;font:900 1.05rem system-ui;box-shadow:0 5px 0 #a61e2d;cursor:pointer}
+button:active{transform:translateY(3px);box-shadow:0 2px 0 #a61e2d}
+.note{font-size:.78rem;color:#cbd5e1;margin:18px 0 0;line-height:1.45}
+</style>
+</head>
+<body>
+<main>
+  <div class="tag">NFC • ACCESSO CONSENTITO</div>
+  <div class="face" aria-hidden="true">😎</div>
+  <h1>Se hai coraggio…<span>tap qui!</span></h1>
+  <p class="sub">Una scansione. Una sorpresa. Zero garanzie.</p>
+  <section class="card" aria-live="polite">
+    <div class="kind" id="kind">Contenuto casuale</div>
+    <p id="joke">Preparati…</p>
+    <video id="media" controls playsinline preload="metadata"></video>
+    <img id="photo" alt="Immagine sorpresa">
+    <p id="caption"></p>
+  </section>
+  <button id="again" type="button">🎲 Tira fuori un'altra sorpresa</button>
+  <p class="note">Se esce un video, premi ▶ per avviarlo con l'audio.<br>Nuovi contenuti? Aggiungili nella cartella <b>media</b> del sito.</p>
+</main>
+<script>
+const jokes = [
+"Se hai letto fin qui, la curiosità ti ha già fregato.",
+"Il telefono è intelligente. Il proprietario è in fase di aggiornamento.",
+"Il buon senso ti ha cercato. Hai rifiutato la chiamata.",
+"Sei come una stampante 3D: a volte parti bene e poi fai spaghetti.",
+"Complimenti: hai usato la tecnologia per perdere tempo.",
+"Non sei pigro: sei in modalità risparmio energetico.",
+"Sei il motivo per cui le istruzioni hanno le figure.",
+"Il tuo cervello ha aperto 37 schede e la musica parte da una di loro.",
+"Questa pagina non giudica. Ma prende appunti.",
+"Sei più raro del calzino che esce dalla lavatrice in coppia.",
+"Sei come il tasto snooze: rimandi solo l'inevitabile.",
+"Sei una leggenda. Le fonti, però, sono anonime.",
+"Il tuo piano era perfetto. Poi sei arrivato tu.",
+"Non è caos, è un sistema che solo tu non capisci.",
+"Sei come il caricabatterie: tutti ti cercano quando serve.",
+"Il tuo autocontrollo è in manutenzione. Riprova più tardi.",
+"Sei arrivato qui per scelta. Ne parleremo.",
+"Il tuo talento nascosto è ricordarti una figuraccia del 2014 alle 3 di notte.",
+"Sei come una riunione che poteva essere un messaggio.",
+"Sei il protagonista del film: Dove ho messo le chiavi?",
+"Non sei indeciso: stai facendo un sondaggio interno.",
+"Il tuo senso dell'orientamento usa la modalità demo.",
+"Sei come il GPS: ricalcoli spesso, ma arrivi.",
+"Questa battuta è gratuita. La dignità, invece, è facoltativa.",
+"Sei un capolavoro in versione beta.",
+"Sei più difficile da trovare del coperchio giusto per un contenitore.",
+"Il tuo entusiasmo è contagioso. Per ora nessuno ha chiamato un medico.",
+"Sei il tipo che legge i termini e condizioni? Certo, come no.",
+"Se hai sorriso, missione compiuta. Se no, riprova con un altro tap.",
+"Grazie per la scansione. Il comitato delle battute ti osserva."
+];
+
+// Quando aggiungi i tuoi file, aggiorna gli elenchi qui sotto.
+// Esempio: "media/video1.mp4" e "media/foto1.jpg"
+const videos = [
+  // "media/video1.mp4",
+  // "media/video2.mp4"
+];
+const images = [
+  // "media/foto1.jpg",
+  // "media/foto2.png"
+];
+
+let lastKey = "";
+const jokeEl = document.getElementById("joke");
+const videoEl = document.getElementById("media");
+const imageEl = document.getElementById("photo");
+const kindEl = document.getElementById("kind");
+const captionEl = document.getElementById("caption");
+
+function chooseDifferent(items, previous) {
+  if (items.length <= 1) return items[0];
+  let item;
+  do { item = items[Math.floor(Math.random() * items.length)]; }
+  while (item === previous);
+  return item;
+}
+function hideMedia() {
+  videoEl.pause();
+  videoEl.removeAttribute("src");
+  videoEl.load();
+  videoEl.style.display = "none";
+  imageEl.removeAttribute("src");
+  imageEl.style.display = "none";
+  captionEl.textContent = "";
+  jokeEl.style.display = "block";
+}
+function showRandom() {
+  hideMedia();
+  const choices = ["joke", ...videos.map((_,i) => "video:"+i), ...images.map((_,i) => "image:"+i)];
+  const key = chooseDifferent(choices, lastKey);
+  lastKey = key;
+  if (key === "joke") {
+    kindEl.textContent = "Battuta casuale 😂";
+    jokeEl.textContent = chooseDifferent(jokes, window.lastJoke || "");
+    window.lastJoke = jokeEl.textContent;
+    return;
+  }
+  if (key.startsWith("video:")) {
+    const src = videos[Number(key.split(":")[1])];
+    kindEl.textContent = "Video sorpresa 🎬";
+    jokeEl.style.display = "none";
+    videoEl.src = src;
+    videoEl.style.display = "block";
+    videoEl.onerror = () => { hideMedia(); kindEl.textContent = "Battuta di riserva 😂"; jokeEl.textContent = "Quel video non si trova ancora: caricalo nella cartella media del sito!"; };
+    videoEl.load();
+    captionEl.textContent = "Premi ▶ per guardare";
+    return;
+  }
+  const src = images[Number(key.split(":")[1])];
+  kindEl.textContent = "Immagine sorpresa 🖼️";
+  jokeEl.style.display = "none";
+  imageEl.src = src;
+  imageEl.style.display = "block";
+  imageEl.onerror = () => { hideMedia(); kindEl.textContent = "Battuta di riserva 😂"; jokeEl.textContent = "Questa immagine non si trova ancora: caricala nella cartella media del sito!"; };
+}
+document.getElementById("again").addEventListener("click", showRandom);
+showRandom();
+</script>
+</body>
+</html>
