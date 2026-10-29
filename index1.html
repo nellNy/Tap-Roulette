@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ff7900"><title>TAP ROULETTE</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:22px 14px;background:#111;color:#fff;font-family:system-ui,Arial,sans-serif;display:flex;justify-content:center}
+main{width:min(100%,520px)}.brand{text-align:center;font-weight:1000;letter-spacing:1px;font-size:1.8rem;margin:8px 0 18px}.brand span{color:#ff7900}
+.card{border:3px solid #ff7900;border-radius:26px;padding:22px 17px;background:linear-gradient(145deg,#292929,#050505);text-align:center;box-shadow:0 12px 32px #0008}
+.pill{display:inline-block;border-radius:30px;background:#ff7900;color:#111;font-size:.72rem;font-weight:1000;padding:7px 12px;letter-spacing:1px}
+h1{font-size:clamp(2.5rem,11vw,4rem);line-height:.9;letter-spacing:-2px;margin:20px 0 12px;font-weight:1000}h1 span{display:block;color:#ff7900}
+p.sub{color:#ccc;line-height:1.45;margin:0 auto 20px;max-width:340px}
+button{width:100%;border:0;border-radius:16px;padding:17px 12px;background:#ff7900;color:#111;font-size:1.05rem;font-weight:1000;cursor:pointer;box-shadow:0 5px 0 #a84700}button:active{transform:translateY(3px);box-shadow:0 2px 0 #a84700}
+.result{background:#fff;color:#111;border-radius:18px;margin-top:19px;padding:20px 15px;min-height:125px;display:flex;flex-direction:column;justify-content:center;align-items:center}.tag{font-size:.7rem;letter-spacing:2px;font-weight:1000;color:#a64b00;margin-bottom:9px}#joke{font-size:1.17rem;line-height:1.35;font-weight:850}
+#media{display:none;text-align:left;margin-top:16px}#media.show{display:block}.mediatitle{color:#ff7900;font-weight:1000;font-size:.8rem;letter-spacing:1px}video,img.mediaimg{display:block;width:100%;max-height:420px;object-fit:contain;background:#000;border:2px solid #444;border-radius:14px}.hint{font-size:.78rem;color:#aaa;line-height:1.4}.foot{text-align:center;color:#999;font-size:.76rem;margin-top:20px}.foot b{color:#ff7900}
+</style></head>
+<body><main>
+<div class="brand">TAP <span>ROULETTE</span></div>
+<section class="card"><div class="pill">⚠ TAPPA A TUO RISCHIO</div>
+<h1>SEI PRONTO?<span>TAP!</span></h1>
+<p class="sub">Ogni tap è una sorpresa: battute pessime, momenti assurdi e contenuti random. Non lamentarti dopo</p>
+<button id="tap">🎲 TAP PER GIRARE</button>
+<div class="result" aria-live="polite"><div class="tag">LA ROULETTE HA DECISO</div><div id="joke">Premi il pulsante e scopri cosa ti tocca…</div></div>
+<div id="media"><div class="mediatitle" id="mediatitle">CONTENUTO RANDOM</div><div id="mediacontent"></div><p class="hint">I video partono quando li tocchi, così funzionano meglio anche su iPhone.</p></div>
+</section><div class="foot">Fatto per ridere. <b>TAP ROULETTE</b> 🟠⚫⚪</div></main>
+<script>
+const jokes=[
+"Il tuo conto in banca ha appena messo il telefono in modalità aereo.",
+"Sei così sfortunato che quando trovi una moneta è il carrello della spesa.",
+"La tua aura oggi ha bisogno di un aggiornamento software.",
+"Complimenti: hai sbloccato il premio «ma chi me l’ha fatto fare».",
+"Il tuo angelo custode ha chiesto un giorno di ferie.",
+"Hai l’energia di un caricabatterie rotto.",
+"Oggi spacchi tutto. Speriamo non sia il telefono.",
+"La fortuna ti sta cercando… ma hai il numero bloccato.",
+"Se procrastinare fosse uno sport, ti iscriveresti domani.",
+"Il tuo ultimo neurone ha appena lasciato la chat.",
+"Questa era la sorpresa. Il rimborso non è previsto.",
+"Hai appena perso 3 secondi della tua vita. Tap di nuovo per perderne altri.",
+"Il destino dice: bevi un bicchiere d’acqua. Sì, anche tu.",
+"Sei una persona unica. Per fortuna, dice il tuo gruppo WhatsApp.",
+"La roulette ha parlato: oggi fai finta di sapere cosa stai facendo.",
+"Il tuo livello di caos è stato aggiornato con successo.",
+"Nessuno sa davvero cosa sta facendo. Alcuni lo nascondono meglio.",
+"Hai la stessa stabilità di un tavolino con tre gambe.",
+"La tua missione: non fare figuracce per 10 minuti.",
+"Premio speciale: un applauso immaginario. 👏",
+"Il cervello ha smesso di rispondere. Riprova dopo il caffè.",
+"Oggi è una giornata perfetta per… tornare a letto.",
+"Hai trovato un easter egg: sei ufficialmente un tapper professionista.",
+"Il tuo futuro è luminoso. Probabilmente hai lasciato gli abbaglianti accesi.",
+"La fortuna è cieca, ma con te si è messa anche i tappi alle orecchie.",
+"Sei arrivato fin qui: il pollice merita una pausa.",
+"Modalità leggenda attivata. Durata: 2 secondi.",
+"Non è un bug, è una caratteristica del tuo carattere.",
+"Il premio vero sono gli amici che ti sopportano.",
+"La roulette consiglia di non prendere decisioni importanti dopo questo tap."
+];
+// Dopo aver caricato i media su GitHub, togli i commenti e inserisci i percorsi.
+const videos=[
+ // "media/video1.mp4",
+ // "media/video2.mp4"
+];
+const images=[
+ // "media/foto1.jpg"
+];
+let lastKey="";
+const jokeEl=document.getElementById("joke");
+const mediaBox=document.getElementById("media");
+const content=document.getElementById("mediacontent");
+const title=document.getElementById("mediatitle");
+
+function clearPrevious(){
+  const oldVideo=content.querySelector("video");
+  if(oldVideo){oldVideo.pause();oldVideo.removeAttribute("src");oldVideo.load();}
+  content.innerHTML="";
+  mediaBox.classList.remove("show");
+  jokeEl.style.display="block";
+}
+function pickDifferent(items, previous){
+  if(items.length<=1) return items[0];
+  let chosen;
+  do { chosen=items[Math.floor(Math.random()*items.length)]; }
+  while(chosen.key===previous);
+  return chosen;
+}
+function showRandom(){
+  clearPrevious();
+
+  const choices=[
+    ...jokes.map((text,i)=>({key:"joke:"+i,type:"joke",text})),
+    ...images.map((src,i)=>({key:"image:"+i,type:"image",src})),
+    ...videos.map((src,i)=>({key:"video:"+i,type:"video",src}))
+  ];
+
+  if(!choices.length){
+    jokeEl.textContent="Aggiungi almeno una battuta, una foto o un video.";
+    return;
+  }
+
+  const item=pickDifferent(choices,lastKey);
+  lastKey=item.key;
+
+  if(item.type==="joke"){
+    jokeEl.textContent=item.text;
+    return;
+  }
+
+  jokeEl.style.display="none";
+  mediaBox.classList.add("show");
+
+  if(item.type==="image"){
+    title.textContent="🖼️ IMMAGINE SORPRESA";
+    const img=document.createElement("img");
+    img.src=item.src;
+    img.alt="Immagine a sorpresa";
+    img.className="mediaimg";
+    img.onerror=()=>{
+      clearPrevious();
+      jokeEl.textContent="Non trovo questa foto. Controlla il nome e il percorso nella cartella media.";
+    };
+    content.appendChild(img);
+  } else {
+    title.textContent="🎬 VIDEO SORPRESA";
+    const video=document.createElement("video");
+    video.src=item.src;
+    video.controls=true;
+    video.playsInline=true;
+    video.preload="metadata";
+    video.onerror=()=>{
+      clearPrevious();
+      jokeEl.textContent="Non trovo questo video. Controlla il nome e il percorso nella cartella media.";
+    };
+    content.appendChild(video);
+  }
+}
+document.getElementById("tap").addEventListener("click",showRandom);
+showRandom();
+</script></body></html>
